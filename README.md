@@ -42,4 +42,10 @@ You need to specify the folder of decoded texts. This folder should contain the 
 cd scripts
 python eval_seq2seq.py --folder ../{your-path-to-outputs} --mbr
 ```
+After running eval_seq2seq.py, you will get some .json files. You can evaluate json files using the command below:
+
+```
+python eval_json.py --json_path path/to/json_file.json --save_path path/to/save_results
+```
+
 
