@@ -58,14 +58,6 @@ def main():
         )
     else: data_unsup = None
 
-    # list of 1) data tensor of : bzn, seq_len, token size
-    # 2) dict of "input_ids" and "input_mask" (bzn, token size)
-    # input mask seems like a odd trade-off from compute and memory
-    #for _ in range(5):
-        #out = next(data)
-        #print(out[1]['input_ids'][0])
-        #print(out[1]['input_mask'][0])
-
     data_valid = load_data_text(
         batch_size=args.batch_size,
         seq_len=args.seq_len,
@@ -76,13 +68,11 @@ def main():
         model_emb=model_weight # using the same embedding wight with tranining data
     )
 
-    # TODO: this is hard coded in... make more general
     pad_emb = model_weight(torch.tensor(0).long()).to(dist_util.dev())
 
     print('#'*30, 'size of vocab', args.vocab_size)
 
     logger.log("### Creating model and diffusion...")
-    # print('#'*30, 'CUDA_VISIBLE_DEVICES', os.environ['CUDA_VISIBLE_DEVICES'])
     model, diffusion = create_model_and_diffusion(
         **args_to_dict(args, load_defaults_config().keys())
     )

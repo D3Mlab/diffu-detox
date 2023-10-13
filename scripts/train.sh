@@ -4,7 +4,7 @@ python -m torch.distributed.launch \
 --use_env run_train.py \
 --name dtest \
 --dataset_unsup wiki \
---folder_name /home/griffin/python/d3m/text_diff/results \
+--folder_name enter_a_folder_path_here \
 --diff_steps 2000 \
 --lr 0.0001 \
 --learning_steps 100000 \
@@ -21,5 +21,5 @@ python -m torch.distributed.launch \
 --schedule_sampler lossaware \
 --notes detox \
 
-#--resume_checkpoint /home/griffin/scratch/check_models/qqp/model000999.pt \
+#--resume_checkpoint enter_an_experiment_path_here \
 #--master_port=12233 \

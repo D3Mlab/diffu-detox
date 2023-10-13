@@ -12,7 +12,6 @@ parser.add_argument('--json_path', type=str, default="eval_results/test")
 parser.add_argument('--save_path', type=str, default="eval_results/test")
 
 args = parser.parse_args()
-# python eval_json.py --json_path seed740263_step0.json --save_path ./
 def eval_json(json_path,save_path):
     if not os.path.exists(save_path):
         os.makedirs(save_path)

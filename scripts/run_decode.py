@@ -7,7 +7,7 @@ sys.path.append('..')
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='decoding args.')
-    parser.add_argument('--model_dir', type=str, default='results/cf_000', help='path to the folder of diffusion model')
+    parser.add_argument('--model_dir', type=str, default='enter_save_path_here', help='path to the folder of diffusion model')
     parser.add_argument('--seed', type=int, default=101, help='random seed')
     parser.add_argument('--step', type=int, default=2000, help='if less than diffusion training steps, like 1000, use ddim sampling')
 

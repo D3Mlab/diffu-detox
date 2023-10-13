@@ -30,10 +30,6 @@ def normal_kl(mean1, logvar1, mean2, logvar2):
         for x in (logvar1, logvar2)
     ]
 
-    # print(logvar2.shape)
-    # temp1 = 0.5 * (-1.0 + logvar2 - logvar1 + th.exp(logvar1 - logvar2))
-    # print(f'const = {temp1.mean()}, coef={(th.exp(-logvar2) * 0.5).mean()}, mse={((mean1 - mean2) ** 2).mean().item()}')
-
     return 0.5 * (
         -1.0
         + logvar2

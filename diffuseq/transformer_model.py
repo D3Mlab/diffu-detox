@@ -76,8 +76,6 @@ class TransformerNetModel(nn.Module):
             self.word_embedding = temp_bert.embeddings.word_embeddings
             with th.no_grad():
                 self.lm_head.weight = self.word_embedding.weight
-            # self.lm_head.weight.requires_grad = False
-            # self.word_embedding.weight.requires_grad = False
             
             self.input_transformers = temp_bert.encoder
             self.register_buffer("position_ids", torch.arange(config.max_position_embeddings).expand((1, -1)))
@@ -138,13 +136,9 @@ class TransformerNetModel(nn.Module):
             emb_x = self.input_up_proj(x)
         else:
             emb_x = x
-        print(emb_x.shape, emb_t.shape)
-        import sys
-        sys.exit()
 
         seq_length = x.size(1)
         position_ids = self.position_ids[:, : seq_length ]
-        # print(emb_x.shape, emb_t.shape, self.position_embeddings)
         emb_inputs = self.position_embeddings(position_ids) + emb_x + emb_t.unsqueeze(1).expand(-1, seq_length, -1)
         emb_inputs = self.dropout(self.LayerNorm(emb_inputs))
 

@@ -100,7 +100,6 @@ class TrainLoop:
 
         self.opt = AdamW(self.master_params, lr=self.lr, weight_decay=self.weight_decay)
 
-        # TODO: how is the ever triggered?
         if self.resume_step:
             # self._load_optimizer_state()
             frac_done = (self.step + self.resume_step) / self.learning_steps
@@ -263,12 +262,6 @@ class TrainLoop:
 
             # batch is data, cond is: dict, keys = [inputs ids, input mask]
             if np.random.rand() < self.cf_ratio and not unsup:
-                #print('normal')
-                #print(micro_cond['input_ids'][0])
-                #print(micro_cond['input_mask'][0])
-                #print(micro[0,:,0])
-                #print()
-
                 # updated embeddings
                 emb = self.pad_emb.view(1,1,-1).expand(micro.shape).to(dist_util.dev())
                 cnd = micro_cond['input_mask'].unsqueeze(dim=-1).expand(micro.shape).to(dist_util.dev())
@@ -288,22 +281,10 @@ class TrainLoop:
                     micro_cond['input_ids'][i] = th.cat((micro_cond['input_ids'][i, ind:], micro_cond['input_ids'][i, :ind]))
                 micro_cond['input_mask'] = th.ones_like(micro_cond['input_mask'])
 
-                #print(micro_cond['input_ids'][0])
-                #print(micro_cond['input_mask'][0])
-                #print(micro[0,:,0])
-                #print('\n\n')
-
             # check for uncond samples
             if unsup:
                 for j in range(micro.shape[0]):
                     if micro_cond['input_ids'][j,1] == 102:
-                        #if j == 0:
-                            #print('unsup')
-                            #print(micro_cond['input_ids'][j])
-                            #print(micro_cond['input_mask'][j])
-                            #print(micro[0,:,0])
-                            #print()
-
                         # updated embeddings
                         emb = self.pad_emb.view(1,-1).expand(micro[j].shape).to(dist_util.dev())
                         cnd = micro_cond['input_mask'][j].unsqueeze(dim=-1).expand(micro[j].shape).to(dist_util.dev())
@@ -320,12 +301,6 @@ class TrainLoop:
                         micro[j] = th.cat((micro[j, 3:], micro[j, :3]))
                         micro_cond['input_ids'][j] = th.cat((micro_cond['input_ids'][j, 3:], micro_cond['input_ids'][j, :3]))
                         micro_cond['input_mask'][j] = th.ones_like(micro_cond['input_mask'][j])
-
-                        #if j == 0:
-                            #print(micro_cond['input_ids'][j])
-                            #print(micro_cond['input_mask'][j])
-                            #print(micro[j,:,0])
-                            #print('\n\n')
 
             compute_losses = functools.partial(
                 self.diffusion.training_losses,
@@ -378,11 +353,6 @@ class TrainLoop:
         if hasattr(self.opt, "clip_grad_norm"):
             # Some optimizers (like the sharded optimizer) have a specific way to do gradient clipping
             self.opt.clip_grad_norm(max_grad_norm)
-        # else:
-        #     assert False
-        # elif hasattr(self.model, "clip_grad_norm_"):
-        #     # Some models (like FullyShardedDDP) have a specific way to do gradient clipping
-        #     self.model.clip_grad_norm_(args.max_grad_norm)
         else:
             # Revert to normal clipping otherwise, handling Apex or full precision
             th.nn.utils.clip_grad_norm_(
@@ -403,9 +373,6 @@ class TrainLoop:
         sqsum = 0.0
         # cnt = 0
         for p in self.master_params:
-            # print(cnt, p) ## DEBUG
-            # print(cnt, p.grad)
-            # cnt += 1
             if p.grad != None:
                 sqsum += (p.grad ** 2).sum().item()
         logger.logkv_mean("grad_norm", np.sqrt(sqsum))
@@ -435,8 +402,6 @@ class TrainLoop:
                 else:
                     filename = f"ema_{rate}_{(self.step+self.resume_step):06d}.pt"
                 print('writing to', bf.join(self.checkpoint_path, filename))
-                # with bf.BlobFile(bf.join(get_blob_logdir(), filename), "wb") as f:
-                #     th.save(state_dict, f)
                 path = os.path.join(self.checkpoint_path, filename)
                 th.save(state_dict, path) # save locally
 

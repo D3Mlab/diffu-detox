@@ -302,7 +302,6 @@ class GaussianDiffusion:
 
         B, C = x.size(0), x.size(-1)
         assert t.shape == (B,)
-        # print(x.shape)
         model_output = model(x, self._scale_timesteps(t), **model_kwargs)
         
         # for fixedlarge, we set the initial (log-)variance like so
@@ -315,22 +314,18 @@ class GaussianDiffusion:
 
         def process_xstart(x):
             if denoised_fn is not None:
-                # print(denoised_fn)
                 x = denoised_fn(x, t)
             if clip_denoised:
                 return x.clamp(-1, 1)
             return x
 
         if self.predict_xstart:
-            # default is here
             pred_xstart = process_xstart(model_output)
         else:
-            ### model is used to predict eps
             pred_xstart = process_xstart(
                 self._predict_xstart_from_eps(x_t=x, t=t, eps=model_output)
             )
 
-        # this seems very odd to me...
         model_mean, _, _ = self.q_posterior_mean_variance(
             x_start=pred_xstart, x_t=x, t=t
         )
@@ -398,7 +393,6 @@ class GaussianDiffusion:
         )
 
         if top_p is not None and top_p > 0:
-            # print('top_p sampling')
             noise = th.randn_like(x)
             replace_mask = th.abs(noise) > top_p
             while replace_mask.any():
@@ -542,8 +536,7 @@ class GaussianDiffusion:
                 else:
                     denoised_fn_cur = denoised_fn
             else:
-                # this is default
-                if i >= clamp_step:  # clap step is zero
+                if i >= clamp_step:  
                     denoised_fn_cur = denoised_fn
                 else:
                     denoised_fn_cur = None
@@ -573,7 +566,6 @@ class GaussianDiffusion:
         '''
         noise = th.randn_like(x_start_mean)
         assert noise.shape == x_start_mean.shape
-        # print(x_start_mean.device, noise.device)
         return (
              x_start_mean + std * noise
         )
@@ -586,12 +578,10 @@ class GaussianDiffusion:
         '''
         reshaped_x_t = x_t
         logits = get_logits(reshaped_x_t)  # bsz, seqlen, vocab
-        # print(logits.shape)
         loss_fct = th.nn.CrossEntropyLoss(reduction='none')
         decoder_nll = loss_fct(logits.view(-1, logits.size(-1)), input_ids.view(-1)).view(input_ids.shape)
         if mask != None:
             decoder_nll *= mask
-        # print(decoder_nll.shape)
         if mask != None:
             decoder_nll = decoder_nll.sum(dim=-1)/mask.sum(dim=-1)
         else:
@@ -652,7 +642,6 @@ class GaussianDiffusion:
         assert model_output.shape == target.shape == x_start.shape
         terms["mse"] = mean_flat((target - model_output) ** 2)
 
-        # replaced conditional?
         model_out_x_start = self._x0_helper(model_output, x_t, t)['pred_xstart'] # predicted_xstart = model_output
         t0_mask = (t == 0)
         t0_loss = mean_flat((x_start_mean - model_out_x_start) ** 2)
@@ -664,7 +653,6 @@ class GaussianDiffusion:
 
         decoder_nll = self._token_discrete_loss(x_start, get_logits, input_ids_x) # embedding regularization
         terms["nll"] = self._token_discrete_loss(model_out_x_start, get_logits, input_ids_x, mask=input_ids_mask, truncate=True, t=t) # x_0->model_out_x_start
-        # assert (model.lm_head.weight == model.word_embedding.weight).all()
 
         terms["loss"] = terms["mse"] + decoder_nll + tT_loss
 
@@ -715,7 +703,6 @@ class GaussianDiffusion:
         nonzero_mask = (
             (t != 0).float().view(-1, *([1] * (len(x.shape) - 1)))
         )  # no noise when t == 0
-        # print(sigma.mean())
         sample = mean_pred + nonzero_mask * sigma * noise
         if langevin_fn:
             print(t.shape)
@@ -945,7 +932,6 @@ class SpacedDiffusion(GaussianDiffusion):
         self.timestep_map = []
         self.original_num_steps = len(kwargs["betas"])
 
-        # print(kwargs.keys())
         base_diffusion = GaussianDiffusion(**kwargs)  # pylint: disable=missing-kwoa
         last_alpha_cumprod = 1.0
         new_betas = []
@@ -989,14 +975,8 @@ class _WrappedModel:
         self.original_num_steps = original_num_steps
 
     def __call__(self, x, ts, **kwargs):
-        # print(ts)
         map_tensor = th.tensor(self.timestep_map, device=ts.device, dtype=ts.dtype)
         new_ts = map_tensor[ts]
-        # print(new_ts)
         if self.rescale_timesteps:
             new_ts = new_ts.float() * (1000.0 / self.original_num_steps)
-        # temp = self.model(x, new_ts, **kwargs)
-        # print(temp.shape)
-        # return temp
-        # print(new_ts)
         return self.model(x, new_ts, **kwargs)

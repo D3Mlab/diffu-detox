@@ -29,10 +29,8 @@ def get_bleu(recover, reference):
 
 def diversityOfSet(sentences):
     selfBleu = []
-    # print(sentences)
     for i, sentence in enumerate(sentences):
         for j in range(i+1, len(sentences)):
-            # print(sentence, sentences[j])
             score = get_bleu(sentence, sentences[j])
             selfBleu.append(score)
     if len(selfBleu)==0:

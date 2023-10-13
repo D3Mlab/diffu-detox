@@ -42,7 +42,6 @@ def main():
 
     # load configurations.
     config_path = os.path.join(os.path.split(args.model_path)[0], "training_args.json")
-    # sys.setdefaultencoding('utf-8')
     with open(config_path, 'rb', ) as f:
         training_args = json.load(f)
     training_args['batch_size'] = args.batch_size
@@ -53,7 +52,6 @@ def main():
         **args_to_dict(args, load_defaults_config().keys())
     )
 
-    # TODO: port this to train.py
     model.load_state_dict(
         dist_util.load_state_dict(args.model_path, map_location="cpu")
     )
@@ -88,9 +86,6 @@ def main():
 
     start_t = time.time()
     
-    # batch, cond = next(data_valid)
-    # print(batch.shape)
-
     model_base_name = os.path.basename(os.path.split(args.model_path)[0]) + f'.{os.path.split(args.model_path)[1]}'
     out_dir = os.path.join(args.out_dir, f"{model_base_name.split('.ema')[0]}_{args.cf_type}_{args.cf_w:.1f}")
     print(out_dir)
@@ -101,14 +96,12 @@ def main():
     if not os.path.isdir(out_path):
         os.mkdir(out_path)
     out_path = os.path.join(out_path, f"seed{args.seed2}_step{args.clamp_step}.json")
-    # fout = open(out_path, 'a')
 
     all_test_data = []
 
     try:
         while True:
             batch, cond = next(data_valid)
-            # print(batch.shape)
             all_test_data.append(cond)
     except StopIteration:
         print('### End of reading iteration...')
@@ -125,9 +118,6 @@ def main():
         noise = th.randn_like(x_start)
         input_ids_mask = th.broadcast_to(input_ids_mask.unsqueeze(dim=-1), x_start.shape).to(dist_util.dev())
         x_noised = th.where(input_ids_mask==0, x_start, noise)
-
-        # make unconditional noised data
-        #print(5*'\n', x_start.shape)
 
         model_kwargs = {}
         # default to true
@@ -162,14 +152,11 @@ def main():
         )
 
         model_emb_copy.cpu()
-        # print(samples[0].shape) # samples for each step
 
         sample = samples[-1]
         gathered_samples = [th.zeros_like(sample) for _ in range(dist.get_world_size())]
         dist.all_gather(gathered_samples, sample)
         all_sentence = [sample.cpu().numpy() for sample in gathered_samples]
-
-        # print('sampling takes {:.2f}s .....'.format(time.time() - start_t))
 
         word_lst_recover = []
         word_lst_ref = []
@@ -179,14 +166,12 @@ def main():
         arr = np.concatenate(all_sentence, axis=0)
         x_t = th.tensor(arr).cuda()
         # print('decoding for seq2seq', )
-        # print(arr.shape)
 
         reshaped_x_t = x_t
         logits = model.get_logits(reshaped_x_t)  # bsz, seqlen, vocab
 
         cands = th.topk(logits, k=1, dim=-1)
         sample = cands.indices
-        # tokenizer = load_tokenizer(args)
 
         for seq, input_mask in zip(cands.indices, input_ids_mask_ori):
             len_x = args.seq_len - sum(input_mask).tolist()

@@ -46,14 +46,12 @@ def load_data_text(
     data_loader = DataLoader(
         dataset,
         batch_size=batch_size,  # 20,
-        # drop_last=True,
         shuffle=not deterministic,
         num_workers=0,
     )
     if loop:
         return infinite_loader(data_loader)
     else:
-        # print(data_loader)
         return iter(data_loader)
 
 def infinite_loader(data_loader):

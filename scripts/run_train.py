@@ -1,16 +1,13 @@
 import os, sys, time, argparse 
 sys.path.append('.')
 
-# TODO: update this for pre-emption
-# check if args.name has been used
 def ckpth(f, path):
-    # path = f_006 for example
     if f in path: print('path')
     return f in path and len(path) == len(f) + 4 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='training args.')
-    parser.add_argument('--name', type=str, default='dev', help='name of experiment folder')
+    parser.add_argument('--name', type=str, default='enter_experiment_folder_here', help='name of experiment folder')
     parser.add_argument('--dataset', type=str, default='', help='name of training dataset')
     parser.add_argument('--dataset_unsup', type=str, default='None', help='name on unsup dataset')
     parser.add_argument('--data_dir', type=str, default='', help='path to training dataset')
@@ -43,10 +40,9 @@ if __name__ == '__main__':
     # set working dir to the upper folder
     abspath = os.path.abspath(sys.argv[0])
     dname = os.path.dirname(abspath)
-    dname = os.path.dirname(dname) # calling this twice is ugly
-    os.chdir(dname) # this is very useful!!
+    dname = os.path.dirname(dname)     
+    os.chdir(dname) 
 
-    # TODO: this is unclear to me still
     if int(os.environ['LOCAL_RANK']) == 0:
         if not os.path.isdir(args.folder_name):
             os.mkdir(args.folder_name)
